@@ -51,6 +51,10 @@ bash "enable security" do
 end
 
 execute "chown" do
+  command "chown tomcat:tomcat -R /etc/tomcat6/"
+end
+
+execute "chown" do
   command "chown tomcat:tomcat -R /usr/share/tomcat6/"
 end
 
