@@ -1,0 +1,194 @@
+{
+    "Resources": {
+        "IPAddress": {
+            "Type": "AWS::EC2::EIP"
+        },
+        "Ec2Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "SecurityGroups": [
+                    {
+                        "Ref": "TomcatSecurityGroup"
+                    },
+                    {
+                        "Ref": "SSHSecurityGroup"
+                    }
+                ],
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSRegionArch2AMI",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        {
+                            "Fn::FindInMap": [
+                                "AWSInstanceType2Arch",
+                                {
+                                    "Ref": "InstanceType"
+                                },
+                                "Arch"
+                            ]
+                        }
+                    ]
+                },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash -v\n",
+                                "ln -sf /usr/share/zoneinfo/EST5EDT /etc/localtime\n",
+                                "date > /home/ec2-user/starttime\n",
+                                "yum -y update > /home/ec2-user/yum.update.log 2>&1\n",
+                                "yum -y install git libxml2-devel gcc gcc-c++ automake autoconf make curl dmidecode > /home/ec2-user/yum.install.log 2>&1\n",
+                                "wget https://s3.amazonaws.com/sea2shore/resources/rpm/ruby-1.9.3p0-2.amzn1.x86_64.rpm > /home/ec2-user/wget.log 2>&1\n",
+                                "rpm -Uvhf ruby-1.9.3p0-2.amzn1.x86_64.rpm > /home/ec2-user/ruby.install.log 2>&1\n",
+                                "gem install chef --no-ri --no-rdoc > /home/ec2-user/chef.install.log 2>&1\n",
+                                "git clone https://github.com/jsywulak/asgard-in-the-cloud.git asgard-in-the-cloud > /home/ec2-user/git.clone.log 2>&1\n",
+                                "chef-solo -c ~/asgard-in-the-cloud/solo.rb -j ~/asgard-in-the-cloud/solo.js -l debug > /home/ec2-user/chef.solo.log 2>&1\n",
+                                "date > /home/ec2-user/stoptime\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "TomcatSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow access to the server via Tomcat",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8080",
+                        "ToPort": "8080",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "SSHSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow access to the server via SSH",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        }
+    },
+    "Mappings": {
+        "AWSInstanceType2Arch": {
+            "t1.micro": {
+                "Arch": "64"
+            },
+            "m1.small": {
+                "Arch": "64"
+            },
+            "m1.medium": {
+                "Arch": "64"
+            },
+            "m1.large": {
+                "Arch": "64"
+            },
+            "m1.xlarge": {
+                "Arch": "64"
+            },
+            "m2.xlarge": {
+                "Arch": "64"
+            },
+            "m2.2xlarge": {
+                "Arch": "64"
+            },
+            "m2.4xlarge": {
+                "Arch": "64"
+            },
+            "c1.medium": {
+                "Arch": "64"
+            },
+            "c1.xlarge": {
+                "Arch": "64"
+            }
+        },
+        "AWSRegionArch2AMI": {
+            "us-east-1": {
+                "32": "ami-7f418316",
+                "64": "ami-7341831a"
+            },
+            "us-west-1": {
+                "32": "ami-951945d0",
+                "64": "ami-971945d2"
+            },
+            "us-west-2": {
+                "32": "ami-16fd7026",
+                "64": "ami-10fd7020"
+            },
+            "eu-west-1": {
+                "32": "ami-24506250",
+                "64": "ami-20506254"
+            },
+            "ap-southeast-1": {
+                "32": "ami-74dda626",
+                "64": "ami-7edda62c"
+            },
+            "ap-northeast-1": {
+                "32": "ami-dcfa4edd",
+                "64": "ami-e8fa4ee9"
+            }
+        }
+    },
+    "Parameters": {
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access into the server",
+            "Type": "String"
+        },
+        "Password": {
+            "Description": "Password to access your Asgard instance",
+            "Type": "String",
+            "NoEcho": "TRUE"
+        },
+        "Username": {
+            "Description": "Username to access your Asgard instance",
+            "Type": "String"
+        },
+        "InstanceType": {
+            "Type": "String",
+            "Default": "t1.micro",
+            "AllowedValues": [
+                "t1.micro",
+                "m1.small",
+                "m1.medium",
+                "m1.large",
+                "m1.xlarge",
+                "m2.xlarge",
+                "m2.2xlarge",
+                "m2.4xlarge",
+                "c1.medium",
+                "c1.xlarge"
+            ]
+        }
+    },
+    "Outputs": {
+        "PrivateIpAddress": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "Ec2Instance",
+                    "PrivateIp"
+                ]
+            }
+        },
+        "InstanceIPAddress": {
+            "Value": {
+                "Ref": "IPAddress"
+            }
+        }
+    }
+}
