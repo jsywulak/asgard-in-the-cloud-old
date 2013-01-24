@@ -42,13 +42,14 @@
                                 "#!/bin/bash -v\n",
                                 "ln -sf /usr/share/zoneinfo/EST5EDT /etc/localtime\n",
                                 "date > /home/ec2-user/starttime\n",
-                                "yum -y update > /home/ec2-user/yum.update.log 2>&1\n",
-                                "yum -y install git libxml2-devel gcc gcc-c++ automake autoconf make curl dmidecode > /home/ec2-user/yum.install.log 2>&1\n",
-                                "wget https://s3.amazonaws.com/sea2shore/resources/rpm/ruby-1.9.3p0-2.amzn1.x86_64.rpm > /home/ec2-user/wget.log 2>&1\n",
-                                "rpm -Uvhf ruby-1.9.3p0-2.amzn1.x86_64.rpm > /home/ec2-user/ruby.install.log 2>&1\n",
-                                "gem install chef --no-ri --no-rdoc > /home/ec2-user/chef.install.log 2>&1\n",
-                                "git clone https://github.com/jsywulak/asgard-in-the-cloud.git asgard-in-the-cloud > /home/ec2-user/git.clone.log 2>&1\n",
-                                "chef-solo -c ~/asgard-in-the-cloud/solo.rb -j ~/asgard-in-the-cloud/solo.js -l debug > /home/ec2-user/chef.solo.log 2>&1\n",
+                                "yum -y install git libxml2-devel gcc gcc-c++ automake autoconf make curl dmidecode\n",
+                                "wget https://s3.amazonaws.com/stelligent-asgard/ruby-1.9.3p0-2.amzn1.x86_64.rpm\n",
+                                "rpm -Uvhf ruby-1.9.3p0-2.amzn1.x86_64.rpm\n",
+                                "gem install chef --no-ri --no-rdoc\n",
+                                "cat solo.source | sed 's/insertpasswordhere/password/g' | sed 's/insertusernamehere/username/g' > solo.js\n",
+                                { "Fn::Join" : [ "", ["cat solo.source | sed 's/insertpasswordhere/",{ "Ref" : "Password" },"/g' | sed 's/insertusernamehere/",{ "Ref" : "Username" },"/g' > solo.js\n"]]},
+                                "git clone https://github.com/jsywulak/asgard-in-the-cloud.git /home/ec2-user/asgard-in-the-cloud\n",
+                                "chef-solo -c /home/ec2-user/asgard-in-the-cloud/solo.rb -j /home/ec2-user/asgard-in-the-cloud/solo.js -l debug\n",
                                 "date > /home/ec2-user/stoptime\n"
                             ]
                         ]
@@ -85,64 +86,28 @@
             }
         }
     },
-    "Mappings": {
+"Mappings": {
         "AWSInstanceType2Arch": {
-            "t1.micro": {
-                "Arch": "64"
-            },
-            "m1.small": {
-                "Arch": "64"
-            },
-            "m1.medium": {
-                "Arch": "64"
-            },
-            "m1.large": {
-                "Arch": "64"
-            },
-            "m1.xlarge": {
-                "Arch": "64"
-            },
-            "m2.xlarge": {
-                "Arch": "64"
-            },
-            "m2.2xlarge": {
-                "Arch": "64"
-            },
-            "m2.4xlarge": {
-                "Arch": "64"
-            },
-            "c1.medium": {
-                "Arch": "64"
-            },
-            "c1.xlarge": {
-                "Arch": "64"
-            }
+            "c1.medium"       : { "Arch": "64" },
+            "c1.xlarge"       : { "Arch": "64" },
+            "cc1.4xlarge"     : { "Arch": "64" },
+            "m1.small"        : { "Arch": "64" },
+            "m1.medium"       : { "Arch": "64" },
+            "m1.large"        : { "Arch": "64" },
+            "m1.xlarge"       : { "Arch": "64" }, 
+            "m2.2xlarge"      : { "Arch": "64" }, 
+            "m2.4xlarge"      : { "Arch": "64" }, 
+            "m2.xlarge"       : { "Arch": "64" }, 
+            "t1.micro"        : { "Arch": "64" }
         },
-        "AWSRegionArch2AMI": {
-            "us-east-1": {
-                "32": "ami-7f418316",
-                "64": "ami-7341831a"
-            },
-            "us-west-1": {
-                "32": "ami-951945d0",
-                "64": "ami-971945d2"
-            },
-            "us-west-2": {
-                "32": "ami-16fd7026",
-                "64": "ami-10fd7020"
-            },
-            "eu-west-1": {
-                "32": "ami-24506250",
-                "64": "ami-20506254"
-            },
-            "ap-southeast-1": {
-                "32": "ami-74dda626",
-                "64": "ami-7edda62c"
-            },
-            "ap-northeast-1": {
-                "32": "ami-dcfa4edd",
-                "64": "ami-e8fa4ee9"
-            }
+        "AWSRegionArch2AMI"   : {
+            "ap-northeast-1"  : { "32": "ami-087acb09", "64": "ami-e47acbe5" },
+            "ap-southeast-1"  : { "32": "ami-b83374ea", "64": "ami-be3374ec" },
+            "eu-west-1"       : { "32": "ami-fd231b89", "64": "ami-f9231b8d" },
+            "sa-east-1"       : { "32": "ami-aa855bb7", "64": "ami-a6855bbb" },
+            "us-east-1"       : { "32": "ami-ed65ba84", "64": "ami-e565ba8c" },
+            "us-west-1"       : { "32": "ami-978cd4d2", "64": "ami-e78cd4a2" },
+            "us-west-2"       : { "32": "ami-38c64a08", "64": "ami-3ac64a0a" }
         }
     },
     "Parameters": {
