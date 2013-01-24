@@ -40,15 +40,14 @@
                             "",
                             [
                                 "#!/bin/bash -v\n",
-                                "ln -sf /usr/share/zoneinfo/EST5EDT /etc/localtime\n",
                                 "date > /home/ec2-user/starttime\n",
+                                "yum -y update\n",
                                 "yum -y install git libxml2-devel gcc gcc-c++ automake autoconf make curl dmidecode\n",
                                 "wget https://s3.amazonaws.com/stelligent-asgard/ruby-1.9.3p0-2.amzn1.x86_64.rpm\n",
                                 "rpm -Uvhf ruby-1.9.3p0-2.amzn1.x86_64.rpm\n",
                                 "gem install chef --no-ri --no-rdoc\n",
-                                "cat solo.source | sed 's/insertpasswordhere/password/g' | sed 's/insertusernamehere/username/g' > solo.js\n",
-                                { "Fn::Join" : [ "", ["cat solo.source | sed 's/insertpasswordhere/",{ "Ref" : "Password" },"/g' | sed 's/insertusernamehere/",{ "Ref" : "Username" },"/g' > solo.js\n"]]},
                                 "git clone https://github.com/jsywulak/asgard-in-the-cloud.git /home/ec2-user/asgard-in-the-cloud\n",
+                                { "Fn::Join" : [ "", ["cat /home/ec2-user/asgard-in-the-cloud/solo.source | sed 's/insertpasswordhere/",{ "Ref" : "Password" },"/g' | sed 's/insertusernamehere/",{ "Ref" : "Username" },"/g' > /home/ec2-user/asgard-in-the-cloud/solo.js\n"]]},
                                 "chef-solo -c /home/ec2-user/asgard-in-the-cloud/solo.rb -j /home/ec2-user/asgard-in-the-cloud/solo.js -l debug\n",
                                 "date > /home/ec2-user/stoptime\n"
                             ]
@@ -142,18 +141,9 @@
         }
     },
     "Outputs": {
-        "PrivateIpAddress": {
-            "Value": {
-                "Fn::GetAtt": [
-                    "Ec2Instance",
-                    "PrivateIp"
-                ]
-            }
-        },
-        "InstanceIPAddress": {
-            "Value": {
-                "Ref": "IPAddress"
-            }
+        "URL": {
+            "Value": 
+                { "Fn::Join" : [ "", ["http://",{"Fn::GetAtt": ["Ec2Instance","PublicDnsName"]},":8080/asgard"]]}            
         }
     }
 }
