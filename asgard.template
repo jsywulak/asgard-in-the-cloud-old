@@ -59,6 +59,11 @@
                                     ]
                                 },
                                 "chef-solo -c /home/ec2-user/asgard-in-the-cloud/solo.rb -j /home/ec2-user/asgard-in-the-cloud/solo.js -l debug\n",
+                                "curl -X PUT -H 'Content-Type:' --data-binary '{\"Status\" : \"SUCCESS\",",
+                                   "\"Reason\" : \"The application myapp is ready\",",
+                                   "\"UniqueId\" : \"myapp\",",
+                                   "\"Data\" : \"Done\"}' ",
+                                   "\"", {"Ref" : "WaitForInstanceWaitHandle"},"\"\n",
                                 "date > /home/ec2-user/stoptime\n"
                             ]
                         ]
@@ -94,8 +99,21 @@
                     }
                 ]
             }
+        },
+        "WaitForInstanceWaitHandle" : {
+          "Type" : "AWS::CloudFormation::WaitConditionHandle",
+          "Properties" : {
+          }
+        },
+        "WaitForInstance" : {
+          "Type" : "AWS::CloudFormation::WaitCondition",
+          "DependsOn" : "Ec2Instance",
+          "Properties" : {
+            "Handle" : {"Ref" : "WaitForInstanceWaitHandle"},
+            "Timeout" : "600"
+          }
         }
-    },
+      },
     "Mappings": {
         "RegionMap": {
             "us-east-1": {
